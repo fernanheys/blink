@@ -8,7 +8,7 @@ struct MenuBarView: View {
     @State private var page: Page = .main
 
     enum Page {
-        case main, settings, about
+        case main, settings, about, hiddenServers, start
     }
 
     var body: some View {
@@ -16,13 +16,21 @@ struct MenuBarView: View {
             mainPage
                 .panelPage(isActive: page == .main, restingOffset: -24)
 
-            SettingsPage(isVisible: page == .settings) { page = .main }
+            SettingsPage(isVisible: page == .settings, back: { page = .main }, showHidden: { page = .hiddenServers })
                 .frame(maxHeight: .infinity, alignment: .top)
                 .panelPage(isActive: page == .settings, restingOffset: 24)
 
             AboutPage { page = .main }
                 .frame(maxHeight: .infinity, alignment: .top)
                 .panelPage(isActive: page == .about, restingOffset: 24)
+
+            HiddenServersPage(isVisible: page == .hiddenServers) { page = .settings }
+                .frame(maxHeight: .infinity, alignment: .top)
+                .panelPage(isActive: page == .hiddenServers, restingOffset: 24)
+
+            StartProjectPage { page = .main }
+                .frame(maxHeight: .infinity, alignment: .top)
+                .panelPage(isActive: page == .start, restingOffset: 24)
         }
         .frame(width: Self.panelSize.width, height: Self.panelSize.height)
         // Material alone takes the wallpaper's colour; the ground pins the
@@ -181,6 +189,8 @@ private extension MenuBarView {
 
     var footer: some View {
         VStack(spacing: 0) {
+            PanelRow("Start a Project…") { page = .start }
+            PanelDivider()
             PanelRow("Settings") { page = .settings }
             PanelDivider()
             PanelRow("About") { page = .about }

@@ -3,6 +3,7 @@ import SwiftUI
 struct SettingsPage: View {
     let isVisible: Bool
     let back: () -> Void
+    let showHidden: () -> Void
 
     @State private var launchAtLogin = LoginItem.isEnabled
     @State private var failure: String?
@@ -37,13 +38,10 @@ struct SettingsPage: View {
 
             PanelDivider()
 
-            if hiddenCount > 0 {
-                PanelRow("Hidden servers", detail: "\(hiddenCount) · Unhide all") {
-                    IgnoredServers.clearAll()
-                    hiddenCount = 0
-                }
-                PanelDivider()
+            PanelRow("Hidden servers", detail: hiddenCount > 0 ? "\(hiddenCount)" : "None") {
+                showHidden()
             }
+            PanelDivider()
 
             PanelRow("Report an Issue") {
                 NSWorkspace.shared.open(Blink.issuesURL)

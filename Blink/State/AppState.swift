@@ -24,6 +24,7 @@ final class AppState {
     private var killedSimUDIDs: Set<String> = []
 
     private var relaunched: [Int: RelaunchedServer] = [:]
+    private var starting: [RelaunchedServer] = []
 
     private(set) var isActive: Bool = false
     var totalCount: Int { servers.count + simulators.count }
@@ -399,6 +400,48 @@ final class AppState {
             try? await Task.sleep(for: .seconds(interval))
         }
         return await isPortListening(port) == listening
+    }
+
+    // MARK: - Start
+
+    private static let startCrashWindow: TimeInterval = 8
+
+    // Returns an error message on failure, nil on success. Success just means
+    // the process survived the crash window — whatever port it binds shows
+    // up on the next regular scan, same as any other dev server.
+    func startProject(at path: String) async -> String? {
+        switch CommandInference.resolve(projectPath: path) {
+        case .failure(let error):
+            return error.localizedDescription
+
+        case .success(let plan):
+            let server: RelaunchedServer
+            do {
+                server = try RelaunchedServer(
+                    executable: plan.executablePath,
+                    arguments: plan.arguments,
+                    directory: plan.directory,
+                    capturedEnvironment: [:]
+                )
+            } catch {
+                return error.localizedDescription
+            }
+
+            starting.append(server)
+            defer { starting.removeAll { $0 === server } }
+
+            let deadline = Date().addingTimeInterval(Self.startCrashWindow)
+            while Date() < deadline {
+                guard server.isRunning else {
+                    let tail = server.outputTail()
+                    return tail.isEmpty ? server.exitDescription : tail
+                }
+                try? await Task.sleep(for: .seconds(0.4))
+            }
+
+            lastEvent = .newDetected
+            return nil
+        }
     }
 
     private func isPortListening(_ port: Int) async -> Bool {
