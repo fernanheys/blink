@@ -26,6 +26,16 @@ extension AppState {
                     guard let info = await ProcessResolver.resolve(pid: port.pid) else {
                         return nil
                     }
+                    // No real dev server runs with cwd at the filesystem
+                    // root — this is almost always a background daemon
+                    // (Raycast, browser helper apps...) that happens to
+                    // hold a listening socket under a matched binary name.
+                    guard !info.workingDirectory.isEmpty, info.workingDirectory != "/" else {
+                        return nil
+                    }
+                    guard !IgnoredServers.isHidden(command: port.command, projectPath: info.workingDirectory) else {
+                        return nil
+                    }
                     let framework = ProcessResolver.detectFramework(from: info)
                     let projectName = ProcessResolver.resolveProjectName(from: info.workingDirectory)
 

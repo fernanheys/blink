@@ -160,6 +160,14 @@ final class AppState {
         killProcessTree(pid: server.pid)
     }
 
+    func hideServer(_ server: DevServer) {
+        IgnoredServers.hide(command: server.command, projectPath: server.projectPath)
+        restartStates[server.port] = nil
+        withAnimation(.easeOut(duration: 0.3)) {
+            servers.removeAll { $0.port == server.port }
+        }
+    }
+
     func dismissFailed(_ server: DevServer) {
         restartStates[server.port] = nil
         withAnimation(.easeOut(duration: 0.3)) {

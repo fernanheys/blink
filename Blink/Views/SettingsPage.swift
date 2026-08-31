@@ -7,6 +7,7 @@ struct SettingsPage: View {
     @State private var launchAtLogin = LoginItem.isEnabled
     @State private var failure: String?
     @State private var accessibilityTrusted = Accessibility.isTrusted
+    @State private var hiddenCount = IgnoredServers.count
 
     var body: some View {
         VStack(spacing: 0) {
@@ -35,6 +36,15 @@ struct SettingsPage: View {
             }
 
             PanelDivider()
+
+            if hiddenCount > 0 {
+                PanelRow("Hidden servers", detail: "\(hiddenCount) · Unhide all") {
+                    IgnoredServers.clearAll()
+                    hiddenCount = 0
+                }
+                PanelDivider()
+            }
+
             PanelRow("Report an Issue") {
                 NSWorkspace.shared.open(Blink.issuesURL)
             }
@@ -49,6 +59,7 @@ struct SettingsPage: View {
             guard visible else { return }
             accessibilityTrusted = Accessibility.isTrusted
             launchAtLogin = LoginItem.isEnabled
+            hiddenCount = IgnoredServers.count
         }
     }
 

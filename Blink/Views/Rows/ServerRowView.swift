@@ -96,6 +96,12 @@ private extension ServerRowView {
                 appState.restartServer(server)
             }
 
+            if failureMessage == nil {
+                RowAction(symbol: "eye.slash", help: "Hide — not a real dev server") {
+                    appState.hideServer(server)
+                }
+            }
+
             RowAction(
                 symbol: "xmark",
                 help: failureMessage == nil ? "Stop server" : "Dismiss",
