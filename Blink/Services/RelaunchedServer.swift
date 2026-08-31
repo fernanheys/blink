@@ -7,14 +7,18 @@ final class RelaunchedServer {
     private let tail = OutputTail()
     private let startedAt = Date()
 
-    init(executable: String, arguments: [String], directory: String) throws {
+    init(executable: String, arguments: [String], directory: String, capturedEnvironment: [String: String]) throws {
         process.executableURL = URL(fileURLWithPath: executable)
         process.arguments = arguments
         process.currentDirectoryURL = URL(fileURLWithPath: directory)
         process.standardOutput = pipe
         process.standardError = pipe
 
-        var environment = ProcessInfo.processInfo.environment
+        // Prefer the environment the original process actually ran with —
+        // it already has secrets resolved by whatever wrapper (op run,
+        // direnv, mise...) launched it. Blink's own environment is only a
+        // fallback for the rare case sysctl couldn't read it.
+        var environment = capturedEnvironment.isEmpty ? ProcessInfo.processInfo.environment : capturedEnvironment
         let binDirectory = (executable as NSString).deletingLastPathComponent
         if !binDirectory.isEmpty {
             let existing = environment["PATH"] ?? "/usr/bin:/bin:/usr/sbin:/sbin"

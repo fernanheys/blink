@@ -30,24 +30,27 @@ enum ProcessResolver {
     struct LaunchInfo {
         let executablePath: String
         let argv: [String]
+        let environment: [String: String]
     }
+
+    private static let emptyLaunchInfo = LaunchInfo(executablePath: "", argv: [], environment: [:])
 
     static func launchInfo(pid: Int) -> LaunchInfo {
         var mib: [Int32] = [CTL_KERN, KERN_PROCARGS2, Int32(pid)]
         var size = 0
 
         guard sysctl(&mib, 3, nil, &size, nil, 0) == 0, size > MemoryLayout<Int32>.size else {
-            return LaunchInfo(executablePath: "", argv: [])
+            return emptyLaunchInfo
         }
 
         var buffer = [UInt8](repeating: 0, count: size)
         guard sysctl(&mib, 3, &buffer, &size, nil, 0) == 0,
               size > MemoryLayout<Int32>.size else {
-            return LaunchInfo(executablePath: "", argv: [])
+            return emptyLaunchInfo
         }
 
         let argc = buffer.withUnsafeBytes { $0.loadUnaligned(as: Int32.self) }
-        guard argc > 0 else { return LaunchInfo(executablePath: "", argv: []) }
+        guard argc > 0 else { return emptyLaunchInfo }
 
         var index = MemoryLayout<Int32>.size
 
@@ -71,9 +74,29 @@ enum ProcessResolver {
             index += 1
         }
 
+        // The kernel packs environ right after argv in the same buffer, one
+        // NUL-terminated "KEY=VALUE" string at a time, ending at the first
+        // empty string (or the end of the buffer).
+        var environment: [String: String] = [:]
+        var envCurrent: [UInt8] = []
+        while index < size {
+            if buffer[index] == 0 {
+                guard !envCurrent.isEmpty else { break }
+                let entry = String(decoding: envCurrent, as: UTF8.self)
+                if let separator = entry.firstIndex(of: "=") {
+                    environment[String(entry[..<separator])] = String(entry[entry.index(after: separator)...])
+                }
+                envCurrent.removeAll(keepingCapacity: true)
+            } else {
+                envCurrent.append(buffer[index])
+            }
+            index += 1
+        }
+
         return LaunchInfo(
             executablePath: String(decoding: executable, as: UTF8.self),
-            argv: result
+            argv: result,
+            environment: environment
         )
     }
 
@@ -83,6 +106,7 @@ enum ProcessResolver {
         let pid: Int
         let executablePath: String
         let arguments: [String]
+        let environment: [String: String]
     }
 
     private static let maxAncestorHops = 4
@@ -104,7 +128,8 @@ enum ProcessResolver {
                 return RelaunchTarget(
                     pid: current,
                     executablePath: info.executablePath,
-                    arguments: Array(info.argv.dropFirst())
+                    arguments: Array(info.argv.dropFirst()),
+                    environment: info.environment
                 )
             }
 

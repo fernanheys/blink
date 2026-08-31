@@ -319,7 +319,8 @@ final class AppState {
             relaunchedServer = try RelaunchedServer(
                 executable: target.executablePath,
                 arguments: target.arguments,
-                directory: server.projectPath
+                directory: server.projectPath,
+                capturedEnvironment: target.environment
             )
         } catch {
             finishRestart(port: server.port, failure: "Couldn't relaunch: \(error.localizedDescription)")
