@@ -121,7 +121,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "rm -rf /Applications/Blink.app\ncp -R \"${BUILT_PRODUCTS_DIR}/${FULL_PRODUCT_NAME}\" /Applications/Blink.app\n";
+			shellScript = "rm -rf /Applications/Blink.app\ncp -R \"${BUILT_PRODUCTS_DIR}/${FULL_PRODUCT_NAME}\" /Applications/Blink.app\n# Build phases run before Xcode signs the product, so the copy must be signed here.\ncodesign --force --options runtime --sign \"${EXPANDED_CODE_SIGN_IDENTITY:--}\" /Applications/Blink.app\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
