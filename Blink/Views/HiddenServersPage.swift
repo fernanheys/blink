@@ -38,7 +38,7 @@ struct HiddenServersPage: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(item.projectName)
                     .font(.system(size: 12, weight: .medium))
-                Text(item.command)
+                Text(verbatim: "\(item.command) :\(item.port)")
                     .font(.system(size: 10, design: .monospaced))
                     .foregroundStyle(.secondary)
             }

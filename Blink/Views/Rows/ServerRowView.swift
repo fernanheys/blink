@@ -92,6 +92,10 @@ private extension ServerRowView {
 
     var actions: some View {
         HStack(spacing: RowAction.spacing) {
+            RowAction(symbol: "safari", help: "Open in browser") {
+                appState.openInBrowser(server)
+            }
+
             RowAction(symbol: "arrow.clockwise", help: "Restart server") {
                 appState.restartServer(server)
             }

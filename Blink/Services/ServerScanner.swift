@@ -33,7 +33,14 @@ extension AppState {
                     guard !info.workingDirectory.isEmpty, info.workingDirectory != "/" else {
                         return nil
                     }
-                    guard !IgnoredServers.isHidden(command: port.command, projectPath: info.workingDirectory) else {
+                    // claude-mem's worker daemon is a single process shared
+                    // across every project — its cwd is just whichever one
+                    // last touched it, so it relabels itself (and drifts
+                    // past any cwd-keyed Hide entry) on every restart.
+                    guard !info.arguments.contains("claude-mem") else {
+                        return nil
+                    }
+                    guard !IgnoredServers.isHidden(command: port.command, projectPath: info.workingDirectory, port: port.port) else {
                         return nil
                     }
                     let framework = ProcessResolver.detectFramework(from: info)

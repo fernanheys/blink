@@ -11,6 +11,8 @@ final class AppState {
 
     var restartStates: [Int: RestartState] = [:]
 
+    var recentProjectPaths: [String] = RecentProjects.all()
+
     var simulatorRestartStates: [String: RestartState] = [:]
 
     private static let pollingInterval: TimeInterval = 3.0
@@ -162,7 +164,7 @@ final class AppState {
     }
 
     func hideServer(_ server: DevServer) {
-        IgnoredServers.hide(command: server.command, projectPath: server.projectPath)
+        IgnoredServers.hide(command: server.command, projectPath: server.projectPath, port: server.port)
         restartStates[server.port] = nil
         withAnimation(.easeOut(duration: 0.3)) {
             servers.removeAll { $0.port == server.port }
@@ -439,6 +441,8 @@ final class AppState {
                 try? await Task.sleep(for: .seconds(0.4))
             }
 
+            RecentProjects.record(path)
+            recentProjectPaths = RecentProjects.all()
             lastEvent = .newDetected
             return nil
         }

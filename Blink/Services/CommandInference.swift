@@ -85,7 +85,13 @@ enum CommandInference {
         return content.contains("op://")
     }
 
-    private static let fallbackSearchPaths = ["/opt/homebrew/bin", "/usr/local/bin", "/usr/bin", "/bin"]
+    // ~/.local/bin comes first so shims like the `op` service-account wrapper
+    // (which keeps the token out of the global environment) win over the raw
+    // binary a plain PATH search would find in /opt/homebrew/bin.
+    private static let fallbackSearchPaths = [
+        (NSHomeDirectory() as NSString).appendingPathComponent(".local/bin"),
+        "/opt/homebrew/bin", "/usr/local/bin", "/usr/bin", "/bin"
+    ]
 
     private static func binaryPath(for name: String) -> String? {
         let fm = FileManager.default

@@ -1,9 +1,9 @@
 import SwiftUI
 
 struct RowAction: View {
-    static let spacing: CGFloat = 4
+    static let spacing: CGFloat = 3
 
-    private static let diameter: CGFloat = 22
+    private static let diameter: CGFloat = 19
 
     let symbol: String
     let help: String
@@ -15,7 +15,7 @@ struct RowAction: View {
     var body: some View {
         Button(action: action) {
             Image(systemName: symbol)
-                .font(.system(size: 11, weight: .semibold))
+                .font(.system(size: 10, weight: .semibold))
                 .foregroundStyle(glyphColor)
                 .frame(width: Self.diameter, height: Self.diameter)
                 .background {
