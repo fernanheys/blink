@@ -10,8 +10,11 @@ extension AppState {
     func scanServers() async -> [DevServer] {
         let ports = await PortScanner.scan()
 
+        // lsof truncates COMMAND to 9 chars, so versioned interpreters arrive
+        // mangled ("python3.11" → "python3.1") — match python by prefix.
         let devPorts = ports.filter { port in
-            Self.devCommands.contains(port.command.lowercased())
+            let command = port.command.lowercased()
+            return Self.devCommands.contains(command) || command.hasPrefix("python")
         }
 
         var seenPorts = Set<Int>()
